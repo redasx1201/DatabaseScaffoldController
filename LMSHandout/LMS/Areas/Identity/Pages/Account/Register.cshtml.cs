@@ -195,62 +195,63 @@ namespace LMS.Areas.Identity.Pages.Account
         /// <returns>The uID of the new user</returns>
         string CreateNewUser(string firstName, string lastName, DateTime DOB, string departmentAbbrev, string role)
         {
+                    // Generate a unique uID of the form 'u' followed by 7 digits, e.g., "u0000001"
             string uid;
             Random rand = new Random();
+            bool unique = false;
 
-        
             do
             {
-                uid = "u" + rand.Next(1000000, 10000000).ToString(); 
-            }
-            while (
-                db.Students.Any(s => s.Uid == uid) ||
-                db.Professors.Any(p => p.Uid == uid) ||
-                db.Administrators.Any(a => a.Uid == uid)
-            );
+                int number = rand.Next(0, 10000000); // 0 to 9999999
+                uid = "u" + number.ToString("D7");
 
-            role = role.Trim();
+                // Ensure the UID is not already used in any of the three user tables
+                bool exists = db.Students.Any(s => s.UId == uid)
+                        || db.Professors.Any(p => p.UId == uid)
+                        || db.Administrators.Any(a => a.UId == uid);
 
-            if (role == "Student")
+                if (!exists)
+                    unique = true;
+
+            } while (!unique);
+
+            // Insert user based on role
+            switch (role)
             {
-                var student = new Student
-                {
-                    Uid = uid,
-                    FirstName = firstName,
-                    LastName = lastName,
-                    Dob = DateOnly.FromDateTime(DOB),
-                    Major = departmentAbbrev
-                };
+                case "Student":
+                    db.Students.Add(new Student
+                    {
+                        UId = uid,
+                        FName = firstName,
+                        LName = lastName,
+                        Dob = DateOnly.FromDateTime(DOB),
+                        Major = departmentAbbrev
+                    });
+                    break;
 
-                db.Students.Add(student);
-            }
-            else if (role == "Professor")
-            {
-                var prof = new Professor
-                {
-                    Uid = uid,
-                    FirstName = firstName,
-                    LastName = lastName,
-                    Dob = DateOnly.FromDateTime(DOB),
-                };
+                case "Professor":
+                    db.Professors.Add(new Professor
+                    {
+                        UId = uid,
+                        FName = firstName,
+                        LName = lastName,
+                        Dob = DateOnly.FromDateTime(DOB),
+                        WorksIn = departmentAbbrev
+                    });
+                    break;
 
-                db.Professors.Add(prof);
-            }
-            else if (role == "Administrator")
-            {
-                var admin = new Administrator
-                {
-                    Uid = uid,
-                    FirstName = firstName,
-                    LastName = lastName,
-                    Dob = DateOnly.FromDateTime(DOB)
-                };
+                case "Administrator":
+                    db.Administrators.Add(new Administrator
+                    {
+                        UId = uid,
+                        FName = firstName,
+                        LName = lastName,
+                        Dob = DateOnly.FromDateTime(DOB),
+                    });
+                    break;
 
-                db.Administrators.Add(admin);
-            }
-            else
-            {
-                throw new ArgumentException("Invalid role. Must be one of: Student, Professor, Administrator.");
+                default:
+                    throw new ArgumentException("Invalid role provided.");
             }
 
             db.SaveChanges();

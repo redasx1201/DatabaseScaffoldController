@@ -5,10 +5,10 @@ namespace LMS.Models.LMSModels
 {
     public partial class Professor
     {
-        public int ProfessorNumber { get; set; }
-        public string Uid { get; set; } = null!;
-        public string FirstName { get; set; } = null!;
-        public string LastName { get; set; } = null!;
+        public string UId { get; set; } = null!;
+        public string FName { get; set; } = null!;
+        public string LName { get; set; } = null!;
         public DateOnly Dob { get; set; }
+        public string WorksIn { get; set; } = null!;
     }
 }

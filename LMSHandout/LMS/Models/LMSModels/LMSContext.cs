@@ -43,243 +43,171 @@ namespace LMS.Models.LMSModels
 
             modelBuilder.Entity<Administrator>(entity =>
             {
-                entity.HasKey(e => e.AdministratorNumber)
+                entity.HasKey(e => e.UId)
                     .HasName("PRIMARY");
 
-                entity.HasIndex(e => e.Uid, "uid")
-                    .IsUnique();
-
-                entity.Property(e => e.AdministratorNumber)
-                    .HasColumnType("int(11)")
-                    .HasColumnName("administratorNumber");
-
-                entity.Property(e => e.Dob).HasColumnName("dob");
-
-                entity.Property(e => e.FirstName)
-                    .HasMaxLength(100)
-                    .HasColumnName("firstName");
-
-                entity.Property(e => e.LastName)
-                    .HasMaxLength(100)
-                    .HasColumnName("lastName");
-
-                entity.Property(e => e.Uid)
+                entity.Property(e => e.UId)
                     .HasMaxLength(8)
-                    .HasColumnName("uid")
+                    .HasColumnName("uID")
                     .IsFixedLength();
+
+                entity.Property(e => e.Dob).HasColumnName("DOB");
+
+                entity.Property(e => e.FName)
+                    .HasMaxLength(100)
+                    .HasColumnName("fName");
+
+                entity.Property(e => e.LName)
+                    .HasMaxLength(100)
+                    .HasColumnName("lName");
             });
 
             modelBuilder.Entity<Assignment>(entity =>
             {
-                entity.HasKey(e => e.AssignmentNumber)
-                    .HasName("PRIMARY");
+                entity.HasIndex(e => e.Category, "Assignments_ibfk_1");
 
-                entity.HasIndex(e => new { e.CategoryNumber, e.Name }, "uniqueAssignment")
+                entity.HasIndex(e => new { e.Name, e.Category }, "name_unique")
                     .IsUnique();
 
-                entity.Property(e => e.AssignmentNumber)
-                    .HasColumnType("int(11)")
-                    .HasColumnName("assignmentNumber");
-
-                entity.Property(e => e.CategoryNumber)
-                    .HasColumnType("int(11)")
-                    .HasColumnName("categoryNumber");
-
-                entity.Property(e => e.Contents)
-                    .HasMaxLength(8192)
-                    .HasColumnName("contents");
-
-                entity.Property(e => e.DueDateTime)
-                    .HasColumnType("datetime")
-                    .HasColumnName("dueDateTime");
-
-                entity.Property(e => e.MaxPoints)
+                entity.Property(e => e.AssignmentId)
                     .HasColumnType("int(10) unsigned")
-                    .HasColumnName("maxPoints");
+                    .HasColumnName("AssignmentID");
 
-                entity.Property(e => e.Name)
-                    .HasMaxLength(100)
-                    .HasColumnName("name");
+                entity.Property(e => e.Category).HasColumnType("int(10) unsigned");
 
-                entity.HasOne(d => d.CategoryNumberNavigation)
-                    .WithMany(p => p.Assignments)
-                    .HasForeignKey(d => d.CategoryNumber)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("fk_Assignments_Category");
+                entity.Property(e => e.Contents).HasMaxLength(8192);
+
+                entity.Property(e => e.Due).HasColumnType("datetime");
+
+                entity.Property(e => e.MaxPoints).HasColumnType("int(10) unsigned");
+
+                entity.Property(e => e.Name).HasMaxLength(100);
             });
 
             modelBuilder.Entity<AssignmentCategory>(entity =>
             {
-                entity.HasKey(e => e.CategoryNumber)
+                entity.HasKey(e => e.CategoryId)
                     .HasName("PRIMARY");
 
-                entity.HasIndex(e => new { e.CourseNumber, e.Name }, "uniqueAssignmentCategory")
+                entity.HasIndex(e => e.InClass, "AssignmentCategories_ibfk_1");
+
+                entity.HasIndex(e => new { e.Name, e.InClass }, "Name")
                     .IsUnique();
 
-                entity.Property(e => e.CategoryNumber)
-                    .HasColumnType("int(11)")
-                    .HasColumnName("categoryNumber");
-
-                entity.Property(e => e.CourseNumber)
-                    .HasColumnType("int(11)")
-                    .HasColumnName("courseNumber");
-
-                entity.Property(e => e.GradingWeight)
+                entity.Property(e => e.CategoryId)
                     .HasColumnType("int(10) unsigned")
-                    .HasColumnName("gradingWeight");
+                    .HasColumnName("CategoryID");
 
-                entity.Property(e => e.Name)
-                    .HasMaxLength(100)
-                    .HasColumnName("name");
+                entity.Property(e => e.InClass).HasColumnType("int(10) unsigned");
+
+                entity.Property(e => e.Name).HasMaxLength(100);
+
+                entity.Property(e => e.Weight).HasColumnType("int(10) unsigned");
             });
 
             modelBuilder.Entity<Class>(entity =>
             {
-                entity.HasKey(e => new { e.CourseNumber, e.Year, e.Season })
-                    .HasName("PRIMARY")
-                    .HasAnnotation("MySql:IndexPrefixLength", new[] { 0, 0, 0 });
+                entity.HasIndex(e => e.Listing, "Classes_ibfk_1");
 
-                entity.Property(e => e.CourseNumber)
-                    .HasColumnType("int(11)")
-                    .HasColumnName("courseNumber");
+                entity.HasIndex(e => new { e.Season, e.Year, e.Listing }, "Season")
+                    .IsUnique();
 
-                entity.Property(e => e.Year)
+                entity.HasIndex(e => e.TaughtBy, "Taught");
+
+                entity.Property(e => e.ClassId)
                     .HasColumnType("int(10) unsigned")
-                    .HasColumnName("year");
+                    .HasColumnName("ClassID");
 
-                entity.Property(e => e.Season)
-                    .HasColumnType("enum('Spring','Summer','Fall')")
-                    .HasColumnName("season");
+                entity.Property(e => e.EndTime).HasColumnType("time");
 
-                entity.Property(e => e.EndTime)
-                    .HasColumnType("time")
-                    .HasColumnName("endTime");
+                entity.Property(e => e.Listing).HasColumnType("int(10) unsigned");
 
-                entity.Property(e => e.Location)
-                    .HasMaxLength(100)
-                    .HasColumnName("location");
+                entity.Property(e => e.Location).HasMaxLength(100);
 
-                entity.Property(e => e.StartTime)
-                    .HasColumnType("time")
-                    .HasColumnName("startTime");
+                entity.Property(e => e.Season).HasMaxLength(6);
 
-                entity.HasOne(d => d.CourseNumberNavigation)
-                    .WithMany(p => p.Classes)
-                    .HasForeignKey(d => d.CourseNumber)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("Classes_ibfk_1");
+                entity.Property(e => e.StartTime).HasColumnType("time");
+
+                entity.Property(e => e.TaughtBy)
+                    .HasMaxLength(8)
+                    .IsFixedLength();
+
+                entity.Property(e => e.Year).HasColumnType("int(10) unsigned");
             });
 
             modelBuilder.Entity<Course>(entity =>
             {
-                entity.HasKey(e => e.CourseNumber)
+                entity.HasKey(e => e.CatalogId)
                     .HasName("PRIMARY");
 
-                entity.HasIndex(e => new { e.SubjectAbbreviation, e.Number }, "uniqueCourse")
+                entity.HasIndex(e => e.Department, "Courses_ibfk_1");
+
+                entity.HasIndex(e => new { e.Number, e.Department }, "Number")
                     .IsUnique();
 
-                entity.Property(e => e.CourseNumber)
-                    .HasColumnType("int(11)")
-                    .HasColumnName("courseNumber");
+                entity.Property(e => e.CatalogId)
+                    .HasColumnType("int(10) unsigned")
+                    .HasColumnName("CatalogID");
 
-                entity.Property(e => e.Name)
-                    .HasMaxLength(100)
-                    .HasColumnName("name");
+                entity.Property(e => e.Department).HasMaxLength(4);
 
-                entity.Property(e => e.Number)
-                    .HasColumnType("int(11)")
-                    .HasColumnName("number");
+                entity.Property(e => e.Name).HasMaxLength(100);
 
-                entity.Property(e => e.SubjectAbbreviation)
-                    .HasMaxLength(4)
-                    .HasColumnName("subjectAbbreviation");
-
-                entity.HasOne(d => d.SubjectAbbreviationNavigation)
-                    .WithMany(p => p.Courses)
-                    .HasForeignKey(d => d.SubjectAbbreviation)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("Courses_ibfk_1");
+                entity.Property(e => e.Number).HasColumnType("int(10) unsigned");
             });
 
             modelBuilder.Entity<Department>(entity =>
             {
-                entity.HasKey(e => e.SubjectAbbreviation)
+                entity.HasKey(e => e.Subject)
                     .HasName("PRIMARY");
 
-                entity.Property(e => e.SubjectAbbreviation).HasMaxLength(4);
+                entity.Property(e => e.Subject).HasMaxLength(4);
 
-                entity.Property(e => e.Name)
-                    .HasMaxLength(100)
-                    .HasColumnName("name");
+                entity.Property(e => e.Name).HasMaxLength(100);
             });
 
             modelBuilder.Entity<Enrolled>(entity =>
             {
-                entity.HasKey(e => e.EnrollmentNumber)
-                    .HasName("PRIMARY");
+                entity.HasKey(e => new { e.Student, e.Class })
+                    .HasName("PRIMARY")
+                    .HasAnnotation("MySql:IndexPrefixLength", new[] { 0, 0 });
 
                 entity.ToTable("Enrolled");
 
-                entity.HasIndex(e => e.StudentNumber, "studentNumber");
+                entity.HasIndex(e => e.Class, "Enrolled_ibfk_2");
 
-                entity.HasIndex(e => new { e.CourseNumber, e.StudentNumber }, "uniqueEnrollment")
-                    .IsUnique();
+                entity.Property(e => e.Student)
+                    .HasMaxLength(8)
+                    .IsFixedLength();
 
-                entity.Property(e => e.EnrollmentNumber)
-                    .HasColumnType("int(11)")
-                    .HasColumnName("enrollmentNumber");
+                entity.Property(e => e.Class).HasColumnType("int(10) unsigned");
 
-                entity.Property(e => e.CourseNumber)
-                    .HasColumnType("int(11)")
-                    .HasColumnName("courseNumber");
-
-                entity.Property(e => e.Grade)
-                    .HasMaxLength(2)
-                    .HasColumnName("grade");
-
-                entity.Property(e => e.StudentNumber)
-                    .HasColumnType("int(11)")
-                    .HasColumnName("studentNumber");
-
-                entity.HasOne(d => d.CourseNumberNavigation)
-                    .WithMany(p => p.Enrolleds)
-                    .HasForeignKey(d => d.CourseNumber)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("Enrolled_ibfk_2");
-
-                entity.HasOne(d => d.StudentNumberNavigation)
-                    .WithMany(p => p.Enrolleds)
-                    .HasForeignKey(d => d.StudentNumber)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("Enrolled_ibfk_1");
+                entity.Property(e => e.Grade).HasMaxLength(2);
             });
 
             modelBuilder.Entity<Professor>(entity =>
             {
-                entity.HasKey(e => e.ProfessorNumber)
+                entity.HasKey(e => e.UId)
                     .HasName("PRIMARY");
 
-                entity.HasIndex(e => e.Uid, "uid")
-                    .IsUnique();
+                entity.HasIndex(e => e.WorksIn, "Professors_ibfk_1");
 
-                entity.Property(e => e.ProfessorNumber)
-                    .HasColumnType("int(11)")
-                    .HasColumnName("professorNumber");
-
-                entity.Property(e => e.Dob).HasColumnName("dob");
-
-                entity.Property(e => e.FirstName)
-                    .HasMaxLength(100)
-                    .HasColumnName("firstName");
-
-                entity.Property(e => e.LastName)
-                    .HasMaxLength(100)
-                    .HasColumnName("lastName");
-
-                entity.Property(e => e.Uid)
+                entity.Property(e => e.UId)
                     .HasMaxLength(8)
-                    .HasColumnName("uid")
+                    .HasColumnName("uID")
                     .IsFixedLength();
+
+                entity.Property(e => e.Dob).HasColumnName("DOB");
+
+                entity.Property(e => e.FName)
+                    .HasMaxLength(100)
+                    .HasColumnName("fName");
+
+                entity.Property(e => e.LName)
+                    .HasMaxLength(100)
+                    .HasColumnName("lName");
+
+                entity.Property(e => e.WorksIn).HasMaxLength(4);
             });
 
             modelBuilder.Entity<Sshkey>(entity =>
@@ -295,88 +223,48 @@ namespace LMS.Models.LMSModels
 
             modelBuilder.Entity<Student>(entity =>
             {
-                entity.HasKey(e => e.StudentNumber)
+                entity.HasKey(e => e.UId)
                     .HasName("PRIMARY");
 
-                entity.HasIndex(e => e.Major, "major");
+                entity.HasIndex(e => e.Major, "Students_ibfk_1");
 
-                entity.HasIndex(e => e.Uid, "uid")
-                    .IsUnique();
-
-                entity.Property(e => e.StudentNumber)
-                    .HasColumnType("int(11)")
-                    .HasColumnName("studentNumber");
-
-                entity.Property(e => e.Dob).HasColumnName("dob");
-
-                entity.Property(e => e.FirstName)
-                    .HasMaxLength(100)
-                    .HasColumnName("firstName");
-
-                entity.Property(e => e.LastName)
-                    .HasMaxLength(100)
-                    .HasColumnName("lastName");
-
-                entity.Property(e => e.Major)
-                    .HasMaxLength(4)
-                    .HasColumnName("major");
-
-                entity.Property(e => e.Uid)
+                entity.Property(e => e.UId)
                     .HasMaxLength(8)
-                    .HasColumnName("uid")
+                    .HasColumnName("uID")
                     .IsFixedLength();
 
-                entity.HasOne(d => d.MajorNavigation)
-                    .WithMany(p => p.Students)
-                    .HasForeignKey(d => d.Major)
-                    .HasConstraintName("Students_ibfk_1");
+                entity.Property(e => e.Dob).HasColumnName("DOB");
+
+                entity.Property(e => e.FName)
+                    .HasMaxLength(100)
+                    .HasColumnName("fName");
+
+                entity.Property(e => e.LName)
+                    .HasMaxLength(100)
+                    .HasColumnName("lName");
+
+                entity.Property(e => e.Major).HasMaxLength(4);
             });
 
             modelBuilder.Entity<Submission>(entity =>
             {
-                entity.HasKey(e => e.SubmissionNumber)
-                    .HasName("PRIMARY");
+                entity.HasKey(e => new { e.Assignment, e.Student })
+                    .HasName("PRIMARY")
+                    .HasAnnotation("MySql:IndexPrefixLength", new[] { 0, 0 });
 
-                entity.HasIndex(e => e.StudentNumber, "studentNumber");
+                entity.HasIndex(e => e.Student, "Submissions_ibfk_2");
 
-                entity.HasIndex(e => new { e.AssignmentNumber, e.StudentNumber }, "uniqueSubmission")
-                    .IsUnique();
+                entity.Property(e => e.Assignment).HasColumnType("int(10) unsigned");
 
-                entity.Property(e => e.SubmissionNumber)
-                    .HasColumnType("int(11)")
-                    .HasColumnName("submissionNumber");
+                entity.Property(e => e.Student)
+                    .HasMaxLength(8)
+                    .IsFixedLength();
 
-                entity.Property(e => e.AssignmentNumber)
-                    .HasColumnType("int(11)")
-                    .HasColumnName("assignmentNumber");
+                entity.Property(e => e.Score).HasColumnType("int(10) unsigned");
 
-                entity.Property(e => e.Contents)
-                    .HasMaxLength(8192)
-                    .HasColumnName("contents");
+                entity.Property(e => e.SubmissionContents).HasMaxLength(8192);
 
-                entity.Property(e => e.Score)
-                    .HasColumnType("int(10) unsigned")
-                    .HasColumnName("score");
-
-                entity.Property(e => e.StudentNumber)
-                    .HasColumnType("int(11)")
-                    .HasColumnName("studentNumber");
-
-                entity.Property(e => e.SubmittedAt)
-                    .HasColumnType("datetime")
-                    .HasColumnName("submittedAt");
-
-                entity.HasOne(d => d.AssignmentNumberNavigation)
-                    .WithMany(p => p.Submissions)
-                    .HasForeignKey(d => d.AssignmentNumber)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("Submissions_ibfk_1");
-
-                entity.HasOne(d => d.StudentNumberNavigation)
-                    .WithMany(p => p.Submissions)
-                    .HasForeignKey(d => d.StudentNumber)
-                    .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("Submissions_ibfk_2");
+                entity.Property(e => e.Time).HasColumnType("datetime");
             });
 
             OnModelCreatingPartial(modelBuilder);

@@ -76,7 +76,21 @@ namespace LMS.Controllers
         /// <returns>The JSON array</returns>
         public IActionResult GetMyClasses(string uid)
         {           
-            return Json(null);
+            var result = from e in db.Enrolleds
+                join c in db.Classes on e.Class equals c.ClassId
+                join course in db.Courses on c.Listing equals course.CatalogId
+                where e.Student == uid
+                select new
+                {
+                    subject = course.Department,
+                    number = course.Number,
+                    name = course.Name,
+                    season = c.Season,
+                    year = c.Year,
+                    grade = e.Grade == "--" ? "--" : e.Grade
+                };
+
+            return Json(result.ToList());
         }
 
         /// <summary>
@@ -95,7 +109,25 @@ namespace LMS.Controllers
         /// <returns>The JSON array</returns>
         public IActionResult GetAssignmentsInClass(string subject, int num, string season, int year, string uid)
         {            
-            return Json(null);
+            var result = from d in db.Departments
+                where d.Subject == subject
+                join c in db.Courses on d.Subject equals c.Department
+                where c.Number == num
+                join cl in db.Classes on c.CatalogId equals cl.Listing
+                where cl.Season == season && cl.Year == year
+                join ac in db.AssignmentCategories on cl.ClassId equals ac.InClass
+                join a in db.Assignments on ac.CategoryId equals a.Category
+                join sub in db.Submissions.Where(s => s.Student == uid) on a.AssignmentId equals sub.Assignment into subs
+                from sub in subs.DefaultIfEmpty()
+            select new
+            {
+                aname = a.Name,
+                cname = ac.Name,
+                due = a.Due,
+                score = sub == null ? (int?)null : (int?)sub.Score
+            };
+
+            return Json(result.ToList());
         }
 
 
@@ -120,7 +152,39 @@ namespace LMS.Controllers
         public IActionResult SubmitAssignmentText(string subject, int num, string season, int year,
           string category, string asgname, string uid, string contents)
         {           
-            return Json(new { success = false });
+            var assignmentId = (from d in db.Departments
+                where d.Subject == subject
+                join c in db.Courses on d.Subject equals c.Department
+                where c.Number == num
+                join cl in db.Classes on c.CatalogId equals cl.Listing
+                where cl.Season == season && cl.Year == year
+                join ac in db.AssignmentCategories on cl.ClassId equals ac.InClass
+                where ac.Name == category
+                join a in db.Assignments on ac.CategoryId equals a.Category
+                where a.Name == asgname
+                select a.AssignmentId).FirstOrDefault();
+
+            var submission = db.Submissions.FirstOrDefault(s => s.Assignment == assignmentId && s.Student == uid);
+
+            if (submission == null)
+            {
+                db.Submissions.Add(new Submission
+                {
+                    Assignment = assignmentId,
+                    Student = uid,
+                    Score = 0,
+                    SubmissionContents = contents,
+                    Time = DateTime.Now
+                });
+            }
+            else
+            {
+                submission.SubmissionContents = contents;
+                submission.Time = DateTime.Now;
+            }
+
+            db.SaveChanges();
+            return Json(new { success = true });
         }
 
 
@@ -136,7 +200,25 @@ namespace LMS.Controllers
         /// false if the student is already enrolled in the class, true otherwise.</returns>
         public IActionResult Enroll(string subject, int num, string season, int year, string uid)
         {          
-            return Json(new { success = false});
+            var classId = (from d in db.Departments
+                where d.Subject == subject
+                join c in db.Courses on d.Subject equals c.Department
+                where c.Number == num
+                join cl in db.Classes on c.CatalogId equals cl.Listing
+                where cl.Season == season && cl.Year == year
+                select cl.ClassId).FirstOrDefault();
+
+            bool alreadyEnrolled = db.Enrolleds.Any(e => e.Class == classId && e.Student == uid);
+
+            if (alreadyEnrolled)
+            {
+                return Json(new { success = false });
+            }
+
+            db.Enrolleds.Add(new Enrolled { Student = uid, Class = classId, Grade = "--" });
+            db.SaveChanges();
+
+            return Json(new { success = true });
         }
 
 
@@ -154,11 +236,38 @@ namespace LMS.Controllers
         /// <returns>A JSON object containing a single field called "gpa" with the number value</returns>
         public IActionResult GetGPA(string uid)
         {            
-            return Json(null);
+            var grades = db.Enrolleds
+                .Where(e => e.Student == uid && e.Grade != "--")
+                .Select(e => e.Grade)
+                .ToList();
+
+            if (grades.Count == 0)
+                return Json(new { gpa = 0.0 });
+
+            Dictionary<string, double> gradePoints = new Dictionary<string, double>
+            {
+                {"A", 4.0}, {"A-", 3.7}, {"B+", 3.3}, {"B", 3.0}, {"B-", 2.7},
+                {"C+", 2.3}, {"C", 2.0}, {"C-", 1.7}, {"D+", 1.3}, {"D", 1.0},
+                {"D-", 0.7}, {"E", 0.0}
+            };
+
+            double totalPoints = 0.0;
+            int count = 0;
+
+            foreach (var g in grades)
+            {
+                if (gradePoints.ContainsKey(g))
+                {
+                    totalPoints += gradePoints[g];
+                    count++;
+                }
+            }
+
+            double gpa = count == 0 ? 0.0 : totalPoints / count;
+            return Json(new { gpa });
         }
                 
         /*******End code to modify********/
-
     }
 }
 

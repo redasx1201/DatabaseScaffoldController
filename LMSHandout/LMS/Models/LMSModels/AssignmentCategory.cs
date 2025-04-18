@@ -5,16 +5,9 @@ namespace LMS.Models.LMSModels
 {
     public partial class AssignmentCategory
     {
-        public AssignmentCategory()
-        {
-            Assignments = new HashSet<Assignment>();
-        }
-
-        public int CategoryNumber { get; set; }
-        public int CourseNumber { get; set; }
+        public uint CategoryId { get; set; }
         public string Name { get; set; } = null!;
-        public uint GradingWeight { get; set; }
-
-        public virtual ICollection<Assignment> Assignments { get; set; }
+        public uint Weight { get; set; }
+        public uint InClass { get; set; }
     }
 }

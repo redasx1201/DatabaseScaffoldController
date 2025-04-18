@@ -476,6 +476,7 @@ namespace LMS_CustomIdentity.Controllers
 
             double finalPercent = totalWeight > 0 ? totalWeightedScore / totalWeight : 0;
 
+            //Letter Grade from the Syllabus
             string letterGrade = "--";
             if (finalPercent >= 0.93) letterGrade = "A";
             else if (finalPercent >= 0.90) letterGrade = "A-";

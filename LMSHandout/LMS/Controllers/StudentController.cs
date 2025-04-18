@@ -254,11 +254,11 @@ namespace LMS.Controllers
             double totalPoints = 0.0;
             int count = 0;
 
-            foreach (var g in grades)
+            foreach (var grade in grades)
             {
-                if (gradePoints.ContainsKey(g))
+                if (gradePoints.TryGetValue(grade, out double points))
                 {
-                    totalPoints += gradePoints[g];
+                    totalPoints += points;
                     count++;
                 }
             }

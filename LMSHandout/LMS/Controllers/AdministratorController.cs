@@ -8,7 +8,7 @@ using LMS.Models.LMSModels;
 using Microsoft.AspNetCore.Mvc;
 
 // For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-[assembly: InternalsVisibleTo( "LMSControllerTests" )]
+[assembly: InternalsVisibleTo("LMSControllerTests")]
 namespace LMS.Controllers
 {
     public class AdministratorController : Controller
@@ -51,7 +51,6 @@ namespace LMS.Controllers
         public IActionResult CreateDepartment(string subject, string name)
         {
             bool exists = db.Departments.Any(d => d.Subject == subject);
-
             if (exists)
             {
                 return Json(new { success = false });
@@ -65,10 +64,8 @@ namespace LMS.Controllers
 
             db.Departments.Add(newDept);
             db.SaveChanges();
-
             return Json(new { success = true });
         }
-
 
         /// <summary>
         /// Returns a JSON array of all the courses in the given department.
@@ -80,14 +77,14 @@ namespace LMS.Controllers
         /// <returns>The JSON result</returns>
         public IActionResult GetCourses(string subject)
         {
-                var courses = db.Courses
-                .Where(course => course.Department == subject)
-                .Select(course => new
-                {
-                    number = course.Number,
-                    name = course.Name
-                })
-                .ToList();
+            var courses = db.Courses
+            .Where(course => course.Department == subject)
+            .Select(course => new
+            {
+                number = course.Number,
+                name = course.Name
+            })
+            .ToList();
 
             return Json(courses);
         }
@@ -112,12 +109,9 @@ namespace LMS.Controllers
                 uid = professor.UId
             })
             .ToList();
-
             return Json(professors);
-            
+
         }
-
-
 
         /// <summary>
         /// Creates a course.
@@ -129,8 +123,8 @@ namespace LMS.Controllers
         /// <returns>A JSON object containing {success = true/false}.
         /// false if the course already exists, true otherwise.</returns>
         public IActionResult CreateCourse(string subject, int number, string name)
-        {        
-                    // Check if the course already exists in the department
+        {
+            // Check if the course already exists in the department
             bool exists = db.Courses.Any(c => c.Department == subject && c.Number == number);
 
             if (exists)
@@ -152,8 +146,6 @@ namespace LMS.Controllers
             return Json(new { success = true });
         }
 
-
-
         /// <summary>
         /// Creates a class offering of a given course.
         /// </summary>
@@ -171,7 +163,7 @@ namespace LMS.Controllers
         /// a Class offering of the same Course in the same Semester,
         /// true otherwise.</returns>
         public IActionResult CreateClass(string subject, int number, string season, int year, DateTime start, DateTime end, string location, string instructor)
-        {            
+        {
             var course = db.Courses.FirstOrDefault(c => c.Department == subject && c.Number == number);
 
             if (course == null)
@@ -186,13 +178,13 @@ namespace LMS.Controllers
             {
                 return Json(new { success = false });
             }
-            bool timeConflict = db.Classes.Any(cl =>
-                cl.Season == season &&
-                cl.Year == year &&
-                cl.Location == location &&
-                start.TimeOfDay < cl.EndTime.ToTimeSpan() &&
-                end.TimeOfDay > cl.StartTime.ToTimeSpan()
-            );
+            bool timeConflict = db.Classes
+            .Where(cl => cl.Season == season &&
+             cl.Year == year &&
+            cl.Location == location)
+            .AsEnumerable() // pull results into memory
+            .Any(cl => start.TimeOfDay < cl.EndTime.ToTimeSpan() &&
+            end.TimeOfDay > cl.StartTime.ToTimeSpan());
 
             if (timeConflict)
             {
@@ -214,8 +206,6 @@ namespace LMS.Controllers
 
             return Json(new { success = true });
         }
-
-
         /*******End code to modify********/
 
     }

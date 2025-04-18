@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 // For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-[assembly: InternalsVisibleTo( "LMSControllerTests" )]
+[assembly: InternalsVisibleTo("LMSControllerTests")]
 namespace LMS.Controllers
 {
     [Authorize(Roles = "Student")]
@@ -75,20 +75,20 @@ namespace LMS.Controllers
         /// <param name="uid">The uid of the student</param>
         /// <returns>The JSON array</returns>
         public IActionResult GetMyClasses(string uid)
-        {           
+        {
             var result = from enrol in db.Enrolleds
-                join cl in db.Classes on enrol.Class equals cl.ClassId
-                join course in db.Courses on cl.Listing equals course.CatalogId
-                where enrol.Student == uid
-                select new
-                {
-                    subject = course.Department,
-                    number = course.Number,
-                    name = course.Name,
-                    season = cl.Season,
-                    year = cl.Year,
-                    grade = enrol.Grade == "--" ? "--" : enrol.Grade
-                };
+                         join cl in db.Classes on enrol.Class equals cl.ClassId
+                         join course in db.Courses on cl.Listing equals course.CatalogId
+                         where enrol.Student == uid
+                         select new
+                         {
+                             subject = course.Department,
+                             number = course.Number,
+                             name = course.Name,
+                             season = cl.Season,
+                             year = cl.Year,
+                             grade = enrol.Grade == "--" ? "--" : enrol.Grade
+                         };
             return Json(result.ToList());
         }
 
@@ -107,24 +107,24 @@ namespace LMS.Controllers
         /// <param name="uid"></param>
         /// <returns>The JSON array</returns>
         public IActionResult GetAssignmentsInClass(string subject, int num, string season, int year, string uid)
-        {            
+        {
             var result = from dep in db.Departments
-                where dep.Subject == subject
-                join cour in db.Courses on dep.Subject equals cour.Department
-                where cour.Number == num
-                join cl in db.Classes on cour.CatalogId equals cl.Listing
-                where cl.Season == season && cl.Year == year
-                join acat in db.AssignmentCategories on cl.ClassId equals acat.InClass
-                join assign in db.Assignments on acat.CategoryId equals assign.Category
-                join sub in db.Submissions.Where(s => s.Student == uid) on assign.AssignmentId equals sub.Assignment into subs
-                from sub in subs.DefaultIfEmpty()
-            select new
-            {
-                aname = assign.Name,
-                cname = acat.Name,
-                due = assign.Due,
-                score = sub == null ? (int?)null : (int?)sub.Score
-            };
+                         where dep.Subject == subject
+                         join cour in db.Courses on dep.Subject equals cour.Department
+                         where cour.Number == num
+                         join cl in db.Classes on cour.CatalogId equals cl.Listing
+                         where cl.Season == season && cl.Year == year
+                         join acat in db.AssignmentCategories on cl.ClassId equals acat.InClass
+                         join assign in db.Assignments on acat.CategoryId equals assign.Category
+                         join sub in db.Submissions.Where(s => s.Student == uid) on assign.AssignmentId equals sub.Assignment into subs
+                         from sub in subs.DefaultIfEmpty()
+                         select new
+                         {
+                             aname = assign.Name,
+                             cname = acat.Name,
+                             due = assign.Due,
+                             score = sub == null ? (int?)null : (int?)sub.Score
+                         };
 
             return Json(result.ToList());
         }
@@ -150,18 +150,18 @@ namespace LMS.Controllers
         /// <returns>A JSON object containing {success = true/false}</returns>
         public IActionResult SubmitAssignmentText(string subject, int num, string season, int year,
           string category, string asgname, string uid, string contents)
-        {           
+        {
             var assignmentId = (from dep in db.Departments
-                where dep.Subject == subject
-                join cour in db.Courses on dep.Subject equals cour.Department
-                where cour.Number == num
-                join cl in db.Classes on cour.CatalogId equals cl.Listing
-                where cl.Season == season && cl.Year == year
-                join acat in db.AssignmentCategories on cl.ClassId equals acat.InClass
-                where acat.Name == category
-                join assign in db.Assignments on acat.CategoryId equals assign.Category
-                where assign.Name == asgname
-                select assign.AssignmentId).FirstOrDefault();
+                                where dep.Subject == subject
+                                join cour in db.Courses on dep.Subject equals cour.Department
+                                where cour.Number == num
+                                join cl in db.Classes on cour.CatalogId equals cl.Listing
+                                where cl.Season == season && cl.Year == year
+                                join acat in db.AssignmentCategories on cl.ClassId equals acat.InClass
+                                where acat.Name == category
+                                join assign in db.Assignments on acat.CategoryId equals assign.Category
+                                where assign.Name == asgname
+                                select assign.AssignmentId).FirstOrDefault();
 
             var submission = db.Submissions.FirstOrDefault(sub => sub.Assignment == assignmentId && sub.Student == uid);
 
@@ -199,13 +199,14 @@ namespace LMS.Controllers
         /// <returns>A JSON object containing {success = {true/false}. 
         /// false if the student is already enrolled in the class, true otherwise.</returns>
         public IActionResult Enroll(string subject, int num, string season, int year, string uid)
-        {          
+        {
             var classId = (from dep in db.Departments
-                where dep.Subject == subject
-                join cour in db.Courses on dep.Subject equals cour.Department where cour.Number == num
-                join cl in db.Classes on cour.CatalogId equals cl.Listing
-                where cl.Season == season && cl.Year == year
-                select cl.ClassId).FirstOrDefault();
+                           where dep.Subject == subject
+                           join cour in db.Courses on dep.Subject equals cour.Department
+                           where cour.Number == num
+                           join cl in db.Classes on cour.CatalogId equals cl.Listing
+                           where cl.Season == season && cl.Year == year
+                           select cl.ClassId).FirstOrDefault();
 
             bool alreadyEnrolled = db.Enrolleds.Any(enrol => enrol.Class == classId && enrol.Student == uid);
 
@@ -233,7 +234,7 @@ namespace LMS.Controllers
         /// <param name="uid">The uid of the student</param>
         /// <returns>A JSON object containing a single field called "gpa" with the number value</returns>
         public IActionResult GetGPA(string uid)
-        {            
+        {
             var grades = db.Enrolleds
                 .Where(enrol => enrol.Student == uid && enrol.Grade != "--")
                 .Select(enrol => enrol.Grade)
@@ -267,7 +268,7 @@ namespace LMS.Controllers
             double gpa = count == 0 ? 0.0 : totalPoints / count;
             return Json(new { gpa });
         }
-                
+
         /*******End code to modify********/
     }
 }

@@ -8,7 +8,7 @@ using LMS.Models.LMSModels;
 using Microsoft.AspNetCore.Mvc;
 
 // For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-[assembly: InternalsVisibleTo( "LMSControllerTests" )]
+[assembly: InternalsVisibleTo("LMSControllerTests")]
 namespace LMS.Controllers
 {
     public class CommonController : Controller
@@ -29,13 +29,11 @@ namespace LMS.Controllers
         /// </summary>
         /// <returns>The JSON array</returns>
         public IActionResult GetDepartments()
-        {            
+        {
             var departments = db.Departments
                 .Select(d => new { name = d.Name, subject = d.Subject }).ToList();
             return Json(departments);
         }
-
-
 
         /// <summary>
         /// Returns a JSON array representing the course catalog.
@@ -49,7 +47,7 @@ namespace LMS.Controllers
         /// </summary>
         /// <returns>The JSON array</returns>
         public IActionResult GetCatalog()
-        {            
+        {
             var catalog = db.Departments
                 .Select(dept => new
                 {
@@ -58,7 +56,8 @@ namespace LMS.Controllers
                     courses = db.Courses
                                 .Where(catal => catal.Department == dept.Subject)
                                 .Select(catal => new { number = catal.Number, cname = catal.Name })
-                                .ToList() } ).ToList();
+                                .ToList()
+                }).ToList();
             return Json(catalog);
         }
 
@@ -77,22 +76,22 @@ namespace LMS.Controllers
         /// <param name="number">The course number, as in 5530</param>
         /// <returns>The JSON array</returns>
         public IActionResult GetClassOfferings(string subject, int number)
-        {            
+        {
             var offerings = from course in db.Courses
-                where course.Department == subject && course.Number == number
-                join cls in db.Classes on course.CatalogId equals cls.Listing
-                join profes in db.Professors on cls.TaughtBy equals profes.UId into profJoin
-                from profes in profJoin.DefaultIfEmpty()
-                select new
-                {
-                    season = cls.Season,
-                    year = cls.Year,
-                    location = cls.Location,
-                    start = cls.StartTime.ToString(),
-                    end = cls.EndTime.ToString(),
-                    fname = profes != null ? profes.FName : "",
-                    lname = profes != null ? profes.LName : ""
-                };
+                            where course.Department == subject && course.Number == number
+                            join cls in db.Classes on course.CatalogId equals cls.Listing
+                            join profes in db.Professors on cls.TaughtBy equals profes.UId into profJoin
+                            from profes in profJoin.DefaultIfEmpty()
+                            select new
+                            {
+                                season = cls.Season,
+                                year = cls.Year,
+                                location = cls.Location,
+                                start = cls.StartTime.ToString(),
+                                end = cls.EndTime.ToString(),
+                                fname = profes != null ? profes.FName : "",
+                                lname = profes != null ? profes.LName : ""
+                            };
             return Json(offerings.ToList());
         }
 
@@ -109,18 +108,18 @@ namespace LMS.Controllers
         /// <param name="asgname">The name of the assignment in the category</param>
         /// <returns>The assignment contents</returns>
         public IActionResult GetAssignmentContents(string subject, int num, string season, int year, string category, string asgname)
-        {            
+        {
             var contents = (from d in db.Departments
-                where d.Subject == subject
-                join cour in db.Courses on d.Subject equals cour.Department
-                where cour.Number == num
-                join cl in db.Classes on cour.CatalogId equals cl.Listing
-                where cl.Season == season && cl.Year == year
-                join acat in db.AssignmentCategories on cl.ClassId equals acat.InClass
-                where acat.Name == category
-                join assign in db.Assignments on acat.CategoryId equals assign.Category
-                where assign.Name == asgname
-                select assign.Contents).FirstOrDefault();
+                            where d.Subject == subject
+                            join cour in db.Courses on d.Subject equals cour.Department
+                            where cour.Number == num
+                            join cl in db.Classes on cour.CatalogId equals cl.Listing
+                            where cl.Season == season && cl.Year == year
+                            join acat in db.AssignmentCategories on cl.ClassId equals acat.InClass
+                            where acat.Name == category
+                            join assign in db.Assignments on acat.CategoryId equals assign.Category
+                            where assign.Name == asgname
+                            select assign.Contents).FirstOrDefault();
             return Content(contents ?? "");
         }
 
@@ -139,23 +138,22 @@ namespace LMS.Controllers
         /// <param name="uid">The uid of the student who submitted it</param>
         /// <returns>The submission text</returns>
         public IActionResult GetSubmissionText(string subject, int num, string season, int year, string category, string asgname, string uid)
-        {            
+        {
             var submission = (from dep in db.Departments
-                where dep.Subject == subject
-                join cour in db.Courses on dep.Subject equals cour.Department
-                where cour.Number == num
-                join cl in db.Classes on cour.CatalogId equals cl.Listing
-                where cl.Season == season && cl.Year == year
-                join acat in db.AssignmentCategories on cl.ClassId equals acat.InClass
-                where acat.Name == category
-                join assign in db.Assignments on acat.CategoryId equals assign.Category
-                where assign.Name == asgname
-                join sub in db.Submissions on new { AID = assign.AssignmentId, UID = uid } equals new { AID = sub.Assignment, UID = sub.Student } into subJoin
-                from sub in subJoin.DefaultIfEmpty()
-                select sub.SubmissionContents).FirstOrDefault();
+                              where dep.Subject == subject
+                              join cour in db.Courses on dep.Subject equals cour.Department
+                              where cour.Number == num
+                              join cl in db.Classes on cour.CatalogId equals cl.Listing
+                              where cl.Season == season && cl.Year == year
+                              join acat in db.AssignmentCategories on cl.ClassId equals acat.InClass
+                              where acat.Name == category
+                              join assign in db.Assignments on acat.CategoryId equals assign.Category
+                              where assign.Name == asgname
+                              join sub in db.Submissions on new { AID = assign.AssignmentId, UID = uid } equals new { AID = sub.Assignment, UID = sub.Student } into subJoin
+                              from sub in subJoin.DefaultIfEmpty()
+                              select sub.SubmissionContents).FirstOrDefault();
             return Content(submission ?? "");
         }
-
 
         /// <summary>
         /// Gets information about a user as a single JSON object.
@@ -174,7 +172,7 @@ namespace LMS.Controllers
         /// or an object containing {success: false} if the user doesn't exist
         /// </returns>
         public IActionResult GetUser(string uid)
-        {       
+        {
             //students    
             var student = db.Students.Where(stud => stud.UId == uid)
                 .Join(db.Departments, stud => stud.Major, dep => dep.Subject, (stud, dep) => new
@@ -186,7 +184,7 @@ namespace LMS.Controllers
                 })
                 .FirstOrDefault();
 
-            if (student != null) 
+            if (student != null)
                 return Json(student);
 
             //professors
@@ -200,15 +198,15 @@ namespace LMS.Controllers
                 })
                 .FirstOrDefault();
 
-            if (professor != null) 
+            if (professor != null)
                 return Json(professor);
 
             //admin
             var admin = db.Administrators
-                .Where(adm=> adm.UId == uid)
+                .Where(adm => adm.UId == uid)
                 .Select(adm => new { fname = adm.FName, lname = adm.LName, uid = adm.UId })
                 .FirstOrDefault();
-            if (admin != null) 
+            if (admin != null)
                 return Json(admin);
 
             return Json(new { success = false });

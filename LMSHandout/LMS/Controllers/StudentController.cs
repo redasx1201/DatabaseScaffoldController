@@ -181,8 +181,6 @@ namespace LMS.Controllers
                 submission.SubmissionContents = contents;
                 submission.Time = DateTime.Now;
             }
-
-            //save and return
             db.SaveChanges();
             return Json(new { success = true });
         }

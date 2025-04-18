@@ -346,7 +346,7 @@ namespace LMS_CustomIdentity.Controllers
         /// <returns>The JSON array</returns>
         public IActionResult GetSubmissionsToAssignment(string subject, int num, string season, int year, string category, string asgname)
         {
-                    var submissions =
+            var submissions =
                 from department in db.Departments
                 join c in db.Courses on department.Subject equals c.Department
                 join cl in db.Classes on c.CatalogId equals cl.Listing
@@ -427,19 +427,19 @@ namespace LMS_CustomIdentity.Controllers
         /// <returns>The JSON array</returns>
         public IActionResult GetMyClasses(string uid)
         {            
-                var classes =
-                from cl in db.Classes
-                join course in db.Courses on cl.Listing equals course.CatalogId
-                join department in db.Departments on course.Department equals department.Subject
-                where cl.TaughtBy == uid
-                select new
-                {
-                    subject = department.Subject,
-                    number = course.Number,
-                    name = course.Name,
-                    season = cl.Season,
-                    year = cl.Year
-                };
+            var classes =
+            from cl in db.Classes
+            join course in db.Courses on cl.Listing equals course.CatalogId
+            join department in db.Departments on course.Department equals department.Subject
+            where cl.TaughtBy == uid
+            select new
+            {
+                subject = department.Subject,
+                number = course.Number,
+                name = course.Name,
+                season = cl.Season,
+                year = cl.Year
+            };
 
             return Json(classes.ToList());
         }

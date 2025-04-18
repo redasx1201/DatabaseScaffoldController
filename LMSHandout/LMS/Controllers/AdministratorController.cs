@@ -51,7 +51,6 @@ namespace LMS.Controllers
         public IActionResult CreateDepartment(string subject, string name)
         {
             bool exists = db.Departments.Any(d => d.Subject == subject);
-
             if (exists)
             {
                 return Json(new { success = false });
@@ -130,15 +129,12 @@ namespace LMS.Controllers
         /// false if the course already exists, true otherwise.</returns>
         public IActionResult CreateCourse(string subject, int number, string name)
         {        
-                    // Check if the course already exists in the department
             bool exists = db.Courses.Any(c => c.Department == subject && c.Number == number);
 
             if (exists)
             {
                 return Json(new { success = false });
             }
-
-            // Create and add the course
             Course newCourse = new Course
             {
                 Department = subject,
@@ -186,6 +182,8 @@ namespace LMS.Controllers
             {
                 return Json(new { success = false });
             }
+
+            //Checks to make sure that no classes are in time conflict
             bool timeConflict = db.Classes.Any(cl =>
                 cl.Season == season &&
                 cl.Year == year &&

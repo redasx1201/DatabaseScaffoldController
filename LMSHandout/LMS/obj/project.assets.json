@@ -9910,24 +9910,25 @@
     ]
   },
   "packageFolders": {
-    "/Users/zackkreulen/.nuget/packages/": {}
+    "/Users/trashy03/.nuget/packages/": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/Users/zackkreulen/Desktop/testing/DatabaseScaffoldController/LMSHandout/LMS/LMS.csproj",
+      "projectUniqueName": "/Users/trashy03/DatabaseScaffoldController/LMSHandout/LMS/LMS.csproj",
       "projectName": "LMS",
-      "projectPath": "/Users/zackkreulen/Desktop/testing/DatabaseScaffoldController/LMSHandout/LMS/LMS.csproj",
-      "packagesPath": "/Users/zackkreulen/.nuget/packages/",
-      "outputPath": "/Users/zackkreulen/Desktop/testing/DatabaseScaffoldController/LMSHandout/LMS/obj/",
+      "projectPath": "/Users/trashy03/DatabaseScaffoldController/LMSHandout/LMS/LMS.csproj",
+      "packagesPath": "/Users/trashy03/.nuget/packages/",
+      "outputPath": "/Users/trashy03/DatabaseScaffoldController/LMSHandout/LMS/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "/Users/zackkreulen/.nuget/NuGet/NuGet.Config"
+        "/Users/trashy03/.nuget/NuGet/NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net9.0"
       ],
       "sources": {
+        "/usr/local/share/dotnet/library-packs": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
@@ -9946,7 +9947,7 @@
         "auditLevel": "low",
         "auditMode": "direct"
       },
-      "SdkAnalysisLevel": "9.0.200"
+      "SdkAnalysisLevel": "9.0.100"
     },
     "frameworks": {
       "net9.0": {
@@ -10002,7 +10003,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/9.0.200/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/9.0.103/PortableRuntimeIdentifierGraph.json"
       }
     }
   }

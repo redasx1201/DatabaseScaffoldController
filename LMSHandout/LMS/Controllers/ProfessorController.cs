@@ -387,27 +387,119 @@ namespace LMS_CustomIdentity.Controllers
         /// <returns>A JSON object containing success = true/false</returns>
         public IActionResult GradeSubmission(string subject, int num, string season, int year, string category, string asgname, string uid, int score)
         {
-            var submission =
-                (from department in db.Departments
-                join course in db.Courses on department.Subject equals course.Department
-                join cl in db.Classes on course.CatalogId equals cl.Listing
-                join assignmentcategory in db.AssignmentCategories on cl.ClassId equals assignmentcategory.InClass
-                join assignment in db.Assignments on assignmentcategory.CategoryId equals assignment.Category
-                join subs in db.Submissions on assignment.AssignmentId equals subs.Assignment
-                where department.Subject == subject
-                    && course.Number == num
-                    && cl.Season == season
-                    && cl.Year == year
-                    && assignmentcategory.Name == category
-                    && assignment.Name == asgname
-                    && subs.Student == uid
-                select subs).FirstOrDefault();
+            var classId = (from dept in db.Departments
+                where dept.Subject == subject
+                join course in db.Courses on dept.Subject equals course.Department
+                where course.Number == num
+                join cls in db.Classes on course.CatalogId equals cls.Listing
+                where cls.Season == season && cls.Year == year
+                select cls.ClassId).FirstOrDefault();
+
+            if (classId == 0)
+                return Json(new { success = false });
+
+            var catId = (from cat in db.AssignmentCategories
+                        where cat.Name == category && cat.InClass == classId
+                        select cat.CategoryId).FirstOrDefault();
+
+            if (catId == 0)
+                return Json(new { success = false });
+
+            var asgId = (from a in db.Assignments
+                        where a.Name == asgname && a.Category == catId
+                        select a.AssignmentId).FirstOrDefault();
+
+            if (asgId == 0)
+                return Json(new { success = false });
+
+            var submission = db.Submissions
+                            .Where(s => s.Assignment == asgId && s.Student == uid)
+                            .FirstOrDefault();
 
             if (submission == null)
             {
-                return Json(new { success = false });
+                submission = new Submission
+                {
+                    Assignment = asgId,
+                    Student = uid,
+                    Score = (uint)score,
+                    Time = DateTime.Now,
+                    SubmissionContents = ""
+                };
+                db.Submissions.Add(submission);
             }
-            submission.Score = (uint)score;
+            else
+            {
+                submission.Score = (uint)score;
+                submission.Time = DateTime.Now;
+            }
+
+            db.SaveChanges();
+
+            // This recalculates the grade for this student
+            var categoryList = db.AssignmentCategories
+                                .Where(cat => cat.InClass == classId)
+                                .ToList();
+
+            double totalWeightedScore = 0;
+            double totalWeight = 0;
+
+            foreach (var cat in categoryList)
+            {
+                var assignments = db.Assignments
+                                    .Where(a => a.Category == cat.CategoryId)
+                                    .ToList();
+
+                double catTotalScore = 0;
+                double catMaxPoints = 0;
+
+                foreach (var a in assignments)
+                {
+                    var sub = db.Submissions
+                                .Where(s => s.Assignment == a.AssignmentId && s.Student == uid)
+                                .FirstOrDefault();
+
+                    if (sub != null)
+                    {
+                        catTotalScore += sub.Score;
+                        catMaxPoints += a.MaxPoints;
+                    }
+                }
+
+                if (catMaxPoints > 0)
+                {
+                    double catPercent = catTotalScore / catMaxPoints;
+                    totalWeightedScore += catPercent * cat.Weight;
+                    totalWeight += cat.Weight;
+                }
+            }
+
+            double finalPercent = totalWeight > 0 ? totalWeightedScore / totalWeight : 0;
+
+            string letterGrade = "--";
+            if (finalPercent >= 0.93) letterGrade = "A";
+            else if (finalPercent >= 0.90) letterGrade = "A-";
+            else if (finalPercent >= 0.87) letterGrade = "B+";
+            else if (finalPercent >= 0.83) letterGrade = "B";
+            else if (finalPercent >= 0.80) letterGrade = "B-";
+            else if (finalPercent >= 0.77) letterGrade = "C+";
+            else if (finalPercent >= 0.73) letterGrade = "C";
+            else if (finalPercent >= 0.70) letterGrade = "C-";
+            else if (finalPercent >= 0.67) letterGrade = "D+";
+            else if (finalPercent >= 0.63) letterGrade = "D";
+            else if (finalPercent >= 0.60) letterGrade = "D-";
+            else letterGrade = "E";
+
+            // This changes the enrolled table
+            var enrollment = db.Enrolleds
+                            .Where(e => e.Class == classId && e.Student == uid)
+                            .FirstOrDefault();
+
+            if (enrollment != null)
+            {
+                enrollment.Grade = letterGrade;
+            }
+
             db.SaveChanges();
 
             return Json(new { success = true });

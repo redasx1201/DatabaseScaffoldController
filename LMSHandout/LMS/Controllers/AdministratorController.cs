@@ -182,18 +182,13 @@ namespace LMS.Controllers
             {
                 return Json(new { success = false });
             }
-
-            //Checks to make sure that no classes are in time conflict
-            bool timeConflict = db.Classes.Any(cl =>
-                cl.Season == season &&
-                cl.Year == year &&
-                cl.Location == location &&
-                (
-                    (start.TimeOfDay < cl.EndTime.ToTimeSpan() && start.TimeOfDay >= cl.StartTime.ToTimeSpan()) ||
-                    (end.TimeOfDay > cl.StartTime.ToTimeSpan() && end.TimeOfDay <= cl.EndTime.ToTimeSpan()) ||
-                    (start.TimeOfDay <= cl.StartTime.ToTimeSpan() && end.TimeOfDay >= cl.EndTime.ToTimeSpan())
-                )
-            );
+                    bool timeConflict = db.Classes
+            .Where(cl => cl.Season == season &&
+                        cl.Year == year &&
+                        cl.Location == location)
+            .AsEnumerable() // pull results into memory
+            .Any(cl => start.TimeOfDay < cl.EndTime.ToTimeSpan() &&
+                    end.TimeOfDay > cl.StartTime.ToTimeSpan());
 
             if (timeConflict)
             {

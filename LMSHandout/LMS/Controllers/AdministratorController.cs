@@ -190,11 +190,8 @@ namespace LMS.Controllers
                 cl.Season == season &&
                 cl.Year == year &&
                 cl.Location == location &&
-                (
-                    (start.TimeOfDay < cl.EndTime.ToTimeSpan() && start.TimeOfDay >= cl.StartTime.ToTimeSpan()) ||
-                    (end.TimeOfDay > cl.StartTime.ToTimeSpan() && end.TimeOfDay <= cl.EndTime.ToTimeSpan()) ||
-                    (start.TimeOfDay <= cl.StartTime.ToTimeSpan() && end.TimeOfDay >= cl.EndTime.ToTimeSpan())
-                )
+                start.TimeOfDay < cl.EndTime.ToTimeSpan() &&
+                end.TimeOfDay > cl.StartTime.ToTimeSpan()
             );
 
             if (timeConflict)

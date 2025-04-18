@@ -50,7 +50,6 @@ namespace LMS.Controllers
         /// false if the department already exists, true otherwise.</returns>
         public IActionResult CreateDepartment(string subject, string name)
         {
-            // Check if a department with the given subject code already exists
             bool exists = db.Departments.Any(d => d.Subject == subject);
 
             if (exists)
@@ -58,7 +57,6 @@ namespace LMS.Controllers
                 return Json(new { success = false });
             }
 
-            // Create and add the new department
             Department newDept = new Department
             {
                 Subject = subject,
@@ -69,7 +67,6 @@ namespace LMS.Controllers
             db.SaveChanges();
 
             return Json(new { success = true });
-        
         }
 
 
@@ -84,11 +81,11 @@ namespace LMS.Controllers
         public IActionResult GetCourses(string subject)
         {
                 var courses = db.Courses
-                .Where(c => c.Department == subject)
-                .Select(c => new
+                .Where(course => course.Department == subject)
+                .Select(course => new
                 {
-                    number = c.Number,
-                    name = c.Name
+                    number = course.Number,
+                    name = course.Name
                 })
                 .ToList();
 
@@ -107,12 +104,12 @@ namespace LMS.Controllers
         public IActionResult GetProfessors(string subject)
         {
             var professors = db.Professors
-            .Where(p => p.WorksIn == subject)
-            .Select(p => new
+            .Where(professor => professor.WorksIn == subject)
+            .Select(professor => new
             {
-                lname = p.LName,
-                fname = p.FName,
-                uid = p.UId
+                lname = professor.LName,
+                fname = professor.FName,
+                uid = professor.UId
             })
             .ToList();
 
@@ -175,17 +172,13 @@ namespace LMS.Controllers
         /// true otherwise.</returns>
         public IActionResult CreateClass(string subject, int number, string season, int year, DateTime start, DateTime end, string location, string instructor)
         {            
-                    // Get the course associated with subject and number
             var course = db.Courses.FirstOrDefault(c => c.Department == subject && c.Number == number);
 
             if (course == null)
             {
                 return Json(new { success = false });
             }
-
-            // Check if a class offering of this course already exists in the same semester
-            bool classExists = db.Classes.Any(cl =>
-                cl.Listing == course.CatalogId &&
+            bool classExists = db.Classes.Any(cl => cl.Listing == course.CatalogId &&
                 cl.Season == season &&
                 cl.Year == year);
 
@@ -193,8 +186,6 @@ namespace LMS.Controllers
             {
                 return Json(new { success = false });
             }
-
-            // Check for location/time conflict in the same semester
             bool timeConflict = db.Classes.Any(cl =>
                 cl.Season == season &&
                 cl.Year == year &&
@@ -210,8 +201,6 @@ namespace LMS.Controllers
             {
                 return Json(new { success = false });
             }
-
-            // Add the new class
             Class newClass = new Class
             {
                 Listing = course.CatalogId,

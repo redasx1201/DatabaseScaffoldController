@@ -22,6 +22,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.Extensions.Logging;
 
 namespace LMS.Areas.Identity.Pages.Account
@@ -195,27 +196,27 @@ namespace LMS.Areas.Identity.Pages.Account
         /// <returns>The uID of the new user</returns>
         string CreateNewUser(string firstName, string lastName, DateTime DOB, string departmentAbbrev, string role)
         {
-                    // Generate a unique uID of the form 'u' followed by 7 digits, e.g., "u0000001"
             string uid;
             Random rand = new Random();
-            bool unique = false;
+            bool uniqueUid = false;
 
             do
             {
-                int number = rand.Next(0, 10000000); // 0 to 9999999
+                //creates uid from 0 - 10000000
+                int number = rand.Next(0, 10000000); 
                 uid = "u" + number.ToString("D7");
 
-                // Ensure the UID is not already used in any of the three user tables
+                //makes sure it is unique and not already used
                 bool exists = db.Students.Any(s => s.UId == uid)
                         || db.Professors.Any(p => p.UId == uid)
                         || db.Administrators.Any(a => a.UId == uid);
 
                 if (!exists)
-                    unique = true;
+                    uniqueUid = true;
 
-            } while (!unique);
+            } while (!uniqueUid);
 
-            // Insert user based on role
+            //insert person based on their role
             switch (role)
             {
                 case "Student":
@@ -251,14 +252,13 @@ namespace LMS.Areas.Identity.Pages.Account
                     break;
 
                 default:
-                    throw new ArgumentException("Invalid role provided.");
+                    throw new ArgumentException("Not a valid Role!");
             }
 
+            //save changes to db
             db.SaveChanges();
 
             return uid;
-
-
         }
 
 

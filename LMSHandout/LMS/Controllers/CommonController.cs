@@ -31,9 +31,7 @@ namespace LMS.Controllers
         public IActionResult GetDepartments()
         {            
             var departments = db.Departments
-                .Select(d => new { name = d.Name, subject = d.Subject })
-                .ToList();
-
+                .Select(d => new { name = d.Name, subject = d.Subject }).ToList();
             return Json(departments);
         }
 
@@ -58,11 +56,9 @@ namespace LMS.Controllers
                     subject = dept.Subject,
                     dname = dept.Name,
                     courses = db.Courses
-                                .Where(c => c.Department == dept.Subject)
-                                .Select(c => new { number = c.Number, cname = c.Name })
-                                .ToList()
-                }).ToList();
-
+                                .Where(catal => catal.Department == dept.Subject)
+                                .Select(catal => new { number = catal.Number, cname = catal.Name })
+                                .ToList() } ).ToList();
             return Json(catalog);
         }
 
@@ -85,8 +81,8 @@ namespace LMS.Controllers
             var offerings = from course in db.Courses
                 where course.Department == subject && course.Number == number
                 join cls in db.Classes on course.CatalogId equals cls.Listing
-                join prof in db.Professors on cls.TaughtBy equals prof.UId into profJoin
-                from prof in profJoin.DefaultIfEmpty()
+                join profes in db.Professors on cls.TaughtBy equals profes.UId into profJoin
+                from profes in profJoin.DefaultIfEmpty()
                 select new
                 {
                     season = cls.Season,
@@ -94,10 +90,9 @@ namespace LMS.Controllers
                     location = cls.Location,
                     start = cls.StartTime.ToString(),
                     end = cls.EndTime.ToString(),
-                    fname = prof != null ? prof.FName : "",
-                    lname = prof != null ? prof.LName : ""
+                    fname = profes != null ? profes.FName : "",
+                    lname = profes != null ? profes.LName : ""
                 };
-
             return Json(offerings.ToList());
         }
 
@@ -117,19 +112,17 @@ namespace LMS.Controllers
         {            
             var contents = (from d in db.Departments
                 where d.Subject == subject
-                join c in db.Courses on d.Subject equals c.Department
-                where c.Number == num
-                join cl in db.Classes on c.CatalogId equals cl.Listing
+                join cour in db.Courses on d.Subject equals cour.Department
+                where cour.Number == num
+                join cl in db.Classes on cour.CatalogId equals cl.Listing
                 where cl.Season == season && cl.Year == year
-                join ac in db.AssignmentCategories on cl.ClassId equals ac.InClass
-                where ac.Name == category
-                join a in db.Assignments on ac.CategoryId equals a.Category
-                where a.Name == asgname
-                select a.Contents).FirstOrDefault();
-
+                join acat in db.AssignmentCategories on cl.ClassId equals acat.InClass
+                where acat.Name == category
+                join assign in db.Assignments on acat.CategoryId equals assign.Category
+                where assign.Name == asgname
+                select assign.Contents).FirstOrDefault();
             return Content(contents ?? "");
         }
-
 
         /// <summary>
         /// This method does NOT return JSON. It returns plain text (containing html).
@@ -147,20 +140,19 @@ namespace LMS.Controllers
         /// <returns>The submission text</returns>
         public IActionResult GetSubmissionText(string subject, int num, string season, int year, string category, string asgname, string uid)
         {            
-            var submission = (from d in db.Departments
-                where d.Subject == subject
-                join c in db.Courses on d.Subject equals c.Department
-                where c.Number == num
-                join cl in db.Classes on c.CatalogId equals cl.Listing
+            var submission = (from dep in db.Departments
+                where dep.Subject == subject
+                join cour in db.Courses on dep.Subject equals cour.Department
+                where cour.Number == num
+                join cl in db.Classes on cour.CatalogId equals cl.Listing
                 where cl.Season == season && cl.Year == year
-                join ac in db.AssignmentCategories on cl.ClassId equals ac.InClass
-                where ac.Name == category
-                join a in db.Assignments on ac.CategoryId equals a.Category
-                where a.Name == asgname
-                join s in db.Submissions on new { AID = a.AssignmentId, UID = uid } equals new { AID = s.Assignment, UID = s.Student } into subJoin
-                from s in subJoin.DefaultIfEmpty()
-                select s.SubmissionContents).FirstOrDefault();
-
+                join acat in db.AssignmentCategories on cl.ClassId equals acat.InClass
+                where acat.Name == category
+                join assign in db.Assignments on acat.CategoryId equals assign.Category
+                where assign.Name == asgname
+                join sub in db.Submissions on new { AID = assign.AssignmentId, UID = uid } equals new { AID = sub.Assignment, UID = sub.Student } into subJoin
+                from sub in subJoin.DefaultIfEmpty()
+                select sub.SubmissionContents).FirstOrDefault();
             return Content(submission ?? "");
         }
 
@@ -182,37 +174,42 @@ namespace LMS.Controllers
         /// or an object containing {success: false} if the user doesn't exist
         /// </returns>
         public IActionResult GetUser(string uid)
-        {           
-            var student = db.Students.Where(s => s.UId == uid)
-                .Join(db.Departments, s => s.Major, d => d.Subject, (s, d) => new
+        {       
+            //students    
+            var student = db.Students.Where(stud => stud.UId == uid)
+                .Join(db.Departments, stud => stud.Major, dep => dep.Subject, (stud, dep) => new
                 {
-                    fname = s.FName,
-                    lname = s.LName,
-                    uid = s.UId,
-                    department = d.Name
+                    fname = stud.FName,
+                    lname = stud.LName,
+                    uid = stud.UId,
+                    department = dep.Name
                 })
                 .FirstOrDefault();
 
-            if (student != null) return Json(student);
+            if (student != null) 
+                return Json(student);
 
-            var professor = db.Professors.Where(p => p.UId == uid)
-                .Join(db.Departments, p => p.WorksIn, d => d.Subject, (p, d) => new
+            //professors
+            var professor = db.Professors.Where(prof => prof.UId == uid)
+                .Join(db.Departments, prof => prof.WorksIn, dep => dep.Subject, (prof, dep) => new
                 {
-                    fname = p.FName,
-                    lname = p.LName,
-                    uid = p.UId,
-                    department = d.Name
+                    fname = prof.FName,
+                    lname = prof.LName,
+                    uid = prof.UId,
+                    department = dep.Name
                 })
                 .FirstOrDefault();
 
-            if (professor != null) return Json(professor);
+            if (professor != null) 
+                return Json(professor);
 
+            //admin
             var admin = db.Administrators
-                .Where(a => a.UId == uid)
-                .Select(a => new { fname = a.FName, lname = a.LName, uid = a.UId })
+                .Where(adm=> adm.UId == uid)
+                .Select(adm => new { fname = adm.FName, lname = adm.LName, uid = adm.UId })
                 .FirstOrDefault();
-
-            if (admin != null) return Json(admin);
+            if (admin != null) 
+                return Json(admin);
 
             return Json(new { success = false });
         }

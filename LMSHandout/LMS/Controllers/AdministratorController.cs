@@ -51,7 +51,23 @@ namespace LMS.Controllers
         public IActionResult CreateDepartment(string subject, string name)
         {
             
-            return Json(new { success = false});
+            bool exists = db.Departments.Any(d => d.SubjectAbbreviation == subject);
+
+            if (exists)
+            {
+                return Json(new { success = false });
+            }
+
+            var dept = new Department
+            {
+                SubjectAbbreviation = subject,
+                Name = name
+            };
+
+            db.Departments.Add(dept);
+            db.SaveChanges();
+
+            return Json(new { success = true });
         }
 
 

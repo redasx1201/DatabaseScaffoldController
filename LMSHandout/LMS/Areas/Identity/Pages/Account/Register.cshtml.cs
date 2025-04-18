@@ -15,6 +15,7 @@ using LMS.Models;
 using LMS.Models.LMSModels;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Builder.Extensions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -192,10 +193,73 @@ namespace LMS.Areas.Identity.Pages.Account
         /// <param name="departmentAbbrev">The department abbreviation that the user belongs to (ignore for Admins) </param>
         /// <param name="role">The user's role: one of "Administrator", "Professor", "Student"</param>
         /// <returns>The uID of the new user</returns>
-        string CreateNewUser( string firstName, string lastName, DateTime DOB, string departmentAbbrev, string role )
+        string CreateNewUser(string firstName, string lastName, DateTime DOB, string departmentAbbrev, string role)
         {
-            return "unknown";
+            string uid;
+            Random rand = new Random();
+
+        
+            do
+            {
+                uid = "u" + rand.Next(1000000, 10000000).ToString(); 
+            }
+            while (
+                db.Students.Any(s => s.Uid == uid) ||
+                db.Professors.Any(p => p.Uid == uid) ||
+                db.Administrators.Any(a => a.Uid == uid)
+            );
+
+            role = role.Trim();
+
+            if (role == "Student")
+            {
+                var student = new Student
+                {
+                    Uid = uid,
+                    FirstName = firstName,
+                    LastName = lastName,
+                    Dob = DateOnly.FromDateTime(DOB),
+                    Major = departmentAbbrev
+                };
+
+                db.Students.Add(student);
+            }
+            else if (role == "Professor")
+            {
+                var prof = new Professor
+                {
+                    Uid = uid,
+                    FirstName = firstName,
+                    LastName = lastName,
+                    Dob = DateOnly.FromDateTime(DOB),
+                };
+
+                db.Professors.Add(prof);
+            }
+            else if (role == "Administrator")
+            {
+                var admin = new Administrator
+                {
+                    Uid = uid,
+                    FirstName = firstName,
+                    LastName = lastName,
+                    Dob = DateOnly.FromDateTime(DOB)
+                };
+
+                db.Administrators.Add(admin);
+            }
+            else
+            {
+                throw new ArgumentException("Invalid role. Must be one of: Student, Professor, Administrator.");
+            }
+
+            db.SaveChanges();
+
+            return uid;
+
+
         }
+
 
         /*******End code to modify********/
     }
